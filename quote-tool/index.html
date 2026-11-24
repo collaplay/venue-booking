@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CollaPlay 報價單</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#222; --muted:#777; --line:#ddd; --accent:#b8864f; --bg:#f4f1ec; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Noto Sans TC',sans-serif; color:var(--ink); background:var(--bg); display:flex; gap:24px; padding:24px; align-items:flex-start; }
+  #editor { width:440px; flex-shrink:0; background:#fff; border-radius:12px; padding:16px; font-size:13px; position:sticky; top:24px; max-height:calc(100vh - 48px); overflow:auto; }
+  #editor h3 { margin:18px 0 8px; font-size:14px; color:var(--accent); }
+  #editor label { display:block; margin:6px 0 2px; color:var(--muted); font-size:12px; }
+  #editor input, #editor select, #editor textarea { width:100%; padding:6px; border:1px solid var(--line); border-radius:6px; font:inherit; }
+  .row { display:flex; gap:6px; } .row > * { flex:1; }
+  .card { border:1px solid var(--line); border-radius:8px; padding:8px; margin-bottom:8px; }
+  .std { color:var(--muted); font-size:12px; margin-top:4px; }
+  button { padding:7px 12px; border:0; border-radius:6px; background:#222; color:#fff; font:inherit; cursor:pointer; }
+  button.ghost { background:none; color:#a33; padding:2px 6px; }
+  .bar { display:flex; gap:6px; flex-wrap:wrap; }
+  #paper { width:210mm; min-height:297mm; background:#fff; padding:16mm 15mm; font-size:10.5pt; line-height:1.55; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+  #paper h1 { font-size:17pt; text-align:center; margin:0 0 4px; letter-spacing:1px; }
+  .meta { display:flex; justify-content:space-between; color:var(--muted); font-size:9.5pt; margin-bottom:12px; }
+  .parties { display:flex; gap:16px; margin-bottom:12px; font-size:9.5pt; }
+  .parties > div { flex:1; border-top:2px solid var(--accent); padding-top:6px; }
+  .parties b { display:block; margin-bottom:2px; }
+  table { width:100%; border-collapse:collapse; font-size:9.5pt; }
+  th { background:#2b2b2b; color:#fff; font-weight:500; padding:6px; text-align:left; }
+  td { border-bottom:1px solid var(--line); padding:6px; vertical-align:top; }
+  td.amt, th.amt { text-align:right; white-space:nowrap; }
+  td.date { white-space:nowrap; }
+  .sum td { border:0; padding:3px 6px; }
+  .sum .big td { font-weight:700; font-size:11pt; border-top:2px solid #222; padding-top:6px; }
+  .terms { font-size:9pt; margin-top:14px; } .terms ol { padding-left:18px; margin:4px 0; }
+  .bank { font-size:9pt; background:var(--bg); padding:8px 10px; border-radius:4px; margin-top:8px; }
+  .sign { display:flex; gap:24px; margin-top:28px; font-size:9.5pt; } .sign > div { flex:1; }
+  .sign .ln { border-bottom:1px solid #222; height:40px; }
+  @media (max-width: 1100px) { body { flex-direction:column; padding:16px; } #editor { width:100%; position:static; max-height:none; } #paper { width:100%; min-height:0; } }
+  @page { size:A4; margin:0; }
+  /* Google Fonts 的 Noto Sans TC 是可變字型，Chrome 會把它轉成 Type3 嵌入，Acrobat 顯示空白；PingFang 同樣是可變字型。列印改用靜態的 Heiti TC */
+  @media print { body { font-family:'Heiti TC','Microsoft JhengHei',sans-serif; background:#fff; padding:0; display:block; } #editor { display:none; } #paper { box-shadow:none; width:210mm; min-height:0; } .sign, .bank, tr { break-inside:avoid; } }
+</style>
+</head>
+<body>
+<div id="editor"></div>
+<div id="paper"></div>
+<input type="file" id="loader" accept=".json" hidden>
+<script src="config.js"></script>
+<script src="pricing.js"></script>
+<script>
+const today = new Date().toISOString().slice(0, 10);
+const blankLine = () => ({ space:'workshop', plan:'A', date:'', start:'13:00', end:'16:00', holiday:false, override:'', reason:'' });
+let Q = {
+  lang:'zh', date:today, validDays:3, payDays:7, payBy:'', event:'',
+  client:{ name:'', taxId:'', contact:'', phone:'', email:'', address:'' },
+  lines:[blankLine()], discount:100, addons:[], depositManual:'', fullPay:false, note:'',
+};
+
+const T = {
+  zh:{ title:'《可能存在的遊樂園》場地租借報價單', date:'報價日期', client:'承租方', lessor:'出租方', taxId:'統一編號',
+       contact:'聯絡人', rep:'負責人', phone:'聯絡電話', email:'電子信箱', addr:'地址', item:'項目', desc:'說明', day:'日期', amt:'含稅金額',
+       disc:'長期合作優惠', discDesc:d => `場地費 ${d % 10 ? d : d / 10} 折`, total:'合計（含稅）', net:'未稅金額', tax:'營業稅 5%',
+       deposit:'訂金', balance:'尾款', payDep:n => `訂金 NT$${n} `, payFull:n => `全額 NT$${n} `, paidSwap:[['已付訂金', '已付款項'], ['訂金', '已付款項']], payIn:n => `確認報價後 ${n} 日內`, payBy:d => ` ${d} 前`,terms:'備註', bank:'匯款資訊',
+       hot:'熱飲', iced:'冰飲', bucket:'桶', person:'人', pastry:t => `手作點心 NT$${t}／人方案`, pastryDesc:(n, t) => `每人 ${n} 款：${t}`, minQty:'最低訂購量',
+       bankL:'銀行', acct:'帳號', acctName:'戶名', sign:'簽章及日期' },
+  en:{ title:'CollaPlay Venue Rental Quotation', date:'Date', client:'Client', lessor:'Lessor', taxId:'Tax ID',
+       contact:'Contact', rep:'Representative', phone:'Phone', email:'Email', addr:'Address', item:'Item', desc:'Description', day:'Date', amt:'Amount (incl. tax)',
+       disc:'Long-term Partner Discount', discDesc:d => `${100 - d}% off venue fees`, total:'Total (incl. 5% tax)', net:'Subtotal (excl. tax)', tax:'Business Tax 5%',
+       deposit:'Deposit', balance:'Balance', payDep:n => `the deposit of NT$${n}`, payFull:n => `the full amount of NT$${n}`, paidSwap:[['Once the deposit is received', 'Once payment is received'], ['the deposit paid', 'the amount paid'], ['the deposit', 'the amount paid']], payIn:n => `within ${n} days of confirming this quotation`, payBy:d => `by ${d}`,terms:'Terms & Conditions', bank:'Bank Transfer Details', bankL:'Bank', acct:'Account No.', acctName:'Account Name', sign:'Signature & Date',
+       hot:'hot', iced:'iced', bucket:'dispenser(s)', person:'guests', pastry:t => `Handmade Pastry Set, NT$${t} per person`, pastryDesc:(n, t) => `${n} items per person: ${t}`, minQty:'minimum order' },
+};
+const CATS = [['drink', '飲品（桶裝）'], ['pastry', '手作點心（每人方案）'], ['meal', '餐點（每人）'], ['equip', '設備'], ['other', '其他']];
+const newAddon = cat => ({
+  drink: { cat, item:0, temp:'熱', qty:1, unit:CONFIG.drinks[0].unit },
+  pastry: { cat, tier:150, picks:[], flavor:0, qty:15, unit:150 },
+  meal: { cat, zh:'餐點', en:'Meal', qty:20, unit:150 },
+  equip: { cat, item:0, qty:1, unit:CONFIG.equipment[0].unit },
+  other: { cat, item:'', zh:'', en:'', qty:1, unit:0 },
+})[cat];
+
+// 自行新增的點心只存在這台電腦的瀏覽器；要永久加入請寫進 config.js
+const loadExtra = () => { try { return JSON.parse(localStorage.getItem('cp-extra-pastries')) || []; } catch { return []; } };
+const allPastries = () => CONFIG.pastries.concat(loadExtra());
+function addPastry() {
+  const zh = prompt('新點心中文名稱'); if (!zh) return;
+  const en = prompt('英文名稱（English name）', '') || zh;
+  const only300 = confirm(`「${zh}」只放在 $300 方案嗎？\n確定＝只有 $300；取消＝$150 與 $300 都有`);
+  const list = loadExtra(); list.push({ zh, en, tiers: only300 ? [300] : [150, 300] });
+  try { localStorage.setItem('cp-extra-pastries', JSON.stringify(list)); } catch { alert('瀏覽器不允許儲存，新點心只在這次有效'); CONFIG.pastries.push(list.at(-1)); }
+  renderEditor();
+}
+
+const opt = (list, v) => list.map((x, j) => `<option value="${j}" ${String(j) === String(v) ? 'selected' : ''}>${esc(x.zh)}　$${x.unit}</option>`).join('');
+function addonFields(a, i) {
+  const k = f => `addons.${i}.${f}`, qtyUnit = (ql, ul) => `<div class="row"><div><label>${ql}</label>${inp(k('qty'), a.qty, 'number')}</div><div><label>${ul}</label>${inp(k('unit'), a.unit, 'number')}</div></div>`;
+  if (a.cat === 'drink') {
+    const d = CONFIG.drinks[a.item];
+    return `<div class="row"><div><label>品項</label><select data-k="${k('item')}">${opt(CONFIG.drinks, a.item)}</select></div>
+      <div style="flex:0 0 80px"><label>冰／熱</label>${sel(k('temp'), a.temp, d.temps.map(t => [t, t]))}</div></div>${qtyUnit('桶數', '每桶單價')}
+      <div class="std">${CONFIG.drinkNote.zh}；需於活動三日前預訂</div>`;
+  }
+  if (a.cat === 'pastry') {
+    const list = allPastries().filter(p => p.tiers.includes(Number(a.tier)));
+    const warn = list.filter(p => p.min && a.picks.includes(p.zh) && a.qty < p.min).map(p => `${p.zh}最低 ${p.min} 個`);
+    const muffin = list.find(p => p.flavors && a.picks.includes(p.zh));
+    return `<label>方案</label>${sel(k('tier'), String(a.tier), [['150', `$150／人・${allPastries().filter(p => p.tiers.includes(150)).length} 擇 ${CONFIG.pastryPick}`], ['300', `$300／人・${allPastries().filter(p => p.tiers.includes(300)).length} 擇 ${CONFIG.pastryPick}`]])}
+      <label>選 ${CONFIG.pastryPick} 款（已選 ${a.picks.length}）</label>
+      ${list.map(p => `<label style="color:inherit;display:inline-block;margin-right:10px"><input type="checkbox" data-pick="${i}" value="${esc(p.zh)}" style="width:auto" ${a.picks.includes(p.zh) ? 'checked' : ''}> ${esc(p.zh)}</label>`).join('')}
+      ${muffin ? `<label>馬芬口味</label>${sel(k('flavor'), String(a.flavor), muffin.flavors.map((f, j) => [String(j), f[0]]))}` : ''}
+      <button class="ghost" style="color:var(--accent)" onclick="addPastry()">＋ 新增點心品項</button>
+      ${qtyUnit('人數', '每人單價')}
+      <div class="std">點心需於活動十日前預訂${warn.length ? `<br><b style="color:#a33">${warn.join('、')}</b>` : ''}${a.picks.length !== CONFIG.pastryPick ? `<br><b style="color:#a33">請選 ${CONFIG.pastryPick} 款</b>` : ''}</div>`;
+  }
+  if (a.cat === 'meal') return `<div class="row"><div><label>品名</label>${inp(k('zh'), a.zh)}</div><div><label>English</label>${inp(k('en'), a.en)}</div></div>${qtyUnit('人數', '每人單價')}`;
+  if (a.cat === 'equip') return `<label>品項</label><select data-k="${k('item')}">${opt(CONFIG.equipment, a.item)}</select>${qtyUnit('數量', '單價')}`;
+  return `<label>品項</label><select data-k="${k('item')}"><option value="">自訂</option>${opt(CONFIG.others, a.item)}</select>
+    <div class="row"><div><label>品名</label>${inp(k('zh'), a.zh)}</div><div><label>English</label>${inp(k('en'), a.en)}</div></div>${qtyUnit('數量', '單價')}`;
+}
+const money = n => 'NT$ ' + Math.round(n).toLocaleString('en-US');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[c]);
+const longDate = (d, lang) => { if (!d) return ''; const [y, m, dd] = d.split('-').map(Number);
+  return lang === 'zh' ? `${y} 年 ${m} 月 ${dd} 日` : new Date(y, m - 1, dd).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }); };
+const shortDate = d => d ? d.replace(/-0?/g, '/') : '';
+
+// ---------- editor ----------
+const inp = (k, v, type = 'text', extra = '') => `<input data-k="${k}" type="${type}" value="${esc(v)}" ${extra}>`;
+const sel = (k, v, opts) => `<select data-k="${k}">${opts.map(([val, txt]) => `<option value="${val}" ${val === v ? 'selected' : ''}>${esc(txt)}</option>`).join('')}</select>`;
+
+function renderEditor() {
+  const c = Q.client;
+  document.getElementById('editor').innerHTML = `
+    <div class="bar">
+      ${sel('lang', Q.lang, [['zh', '中文版'], ['en', 'English']])}
+      <button onclick="printPdf()">列印／存 PDF</button>
+      <button onclick="saveJson()">存檔 JSON</button>
+      <button onclick="loader.click()">開啟 JSON</button>
+    </div>
+    <h3>報價資訊</h3>
+    <div class="row"><div><label>報價日期</label>${inp('date', Q.date, 'date')}</div><div><label>報價有效天數</label>${inp('validDays', Q.validDays, 'number')}</div><div><label>確認後幾天內匯款</label>${inp('payDays', Q.payDays, 'number')}</div></div>
+    <label>或指定匯款截止日（填了就印日期，不用天數）</label>${inp('payBy', Q.payBy, 'date')}
+    <label>活動名稱（檔名用）</label>${inp('event', Q.event)}
+    <h3>承租方</h3>
+    <label>公司／個人名稱</label>${inp('client.name', c.name)}
+    <div class="row"><div><label>統一編號</label>${inp('client.taxId', c.taxId)}</div><div><label>聯絡人</label>${inp('client.contact', c.contact)}</div></div>
+    <div class="row"><div><label>電話</label>${inp('client.phone', c.phone)}</div><div><label>Email</label>${inp('client.email', c.email)}</div></div>
+    <label>地址（發票用，可空白）</label>${inp('client.address', c.address)}
+    <h3>場地</h3>
+    ${Q.lines.map((l, i) => `<div class="card">
+      <div class="row"><div>${sel(`lines.${i}.space`, l.space, CONFIG.spaces.map(s => [s.id, s.zh]))}</div>
+        <button class="ghost" style="flex:0;color:var(--accent);white-space:nowrap" onclick="dupLine(${i})">複製</button>
+        <button class="ghost" style="flex:0;white-space:nowrap" onclick="del('lines',${i})">刪除</button></div>
+      <div class="row">
+        <div><label>日期</label>${inp(`lines.${i}.date`, l.date, 'date')}</div>
+        <div><label>開始</label>${inp(`lines.${i}.start`, l.start, 'time', 'step="1800"')}</div>
+        <div><label>結束</label>${inp(`lines.${i}.end`, l.end, 'time', 'step="1800"')}</div>
+      </div>
+      <div class="row">
+        <div><label>方案（教室／展演廳）</label>${sel(`lines.${i}.plan`, l.plan, [['A', 'A 課程會議講座'], ['B', 'B 商業活動派對']])}</div>
+        <div><label>&nbsp;</label><label style="color:inherit"><input data-k="lines.${i}.holiday" type="checkbox" style="width:auto" ${l.holiday ? 'checked' : ''}> 國定假日（以假日計）</label></div>
+      </div>
+      <div class="row"><div><label>議價金額（空白＝標準價）</label>${inp(`lines.${i}.override`, l.override, 'number')}</div>
+        <div><label>議價理由（不印出）</label>${inp(`lines.${i}.reason`, l.reason)}</div></div>
+      <div class="std" id="std-${i}"></div>
+    </div>`).join('')}
+    <button onclick="addLine()">＋ 場地</button>
+    <label>長期合作折扣（輸入 85＝85 折、8 折輸入 80；空白＝無）</label>${inp('discount', Q.discount === 100 || !Q.discount ? '' : Q.discount, 'number', 'min="1" max="100"')}
+    <h3>加購（餐飲、設備）</h3>
+    ${Q.addons.map((a, i) => `<div class="card">
+      <div class="row"><b style="flex:1">${(CATS.find(c => c[0] === a.cat) || [, '自訂'])[1]}</b>
+        <button class="ghost" style="flex:0" onclick="del('addons',${i})">刪除</button></div>
+      ${addonFields(a, i)}
+      <label>供應時間／說明（例：上午 10:00 提供；中英版共用）</label>${inp(`addons.${i}.note`, a.note || '')}
+    </div>`).join('')}
+    <div class="row">${sel('_addon', '', [['', '＋ 加購：選擇分類…'], ...CATS])}</div>
+    <h3>付款</h3>
+    <label style="color:inherit"><input data-k="fullPay" type="checkbox" style="width:auto" ${Q.fullPay ? 'checked' : ''}> 全額付款（不印訂金、尾款）</label>
+    ${Q.fullPay ? '' : `<label>訂金（空白＝合計 50%）</label>${inp('depositManual', Q.depositManual, 'number')}`}
+    <label>其他備註（會印在條款最後）</label><textarea data-k="note" rows="2">${esc(Q.note)}</textarea>`;
+  renderPreview();
+}
+
+function setPath(path, val) {
+  const keys = path.split('.'); let o = Q;
+  keys.slice(0, -1).forEach(k => o = o[k]);
+  o[keys.at(-1)] = val;
+}
+document.getElementById('editor').addEventListener('input', e => {
+  const pick = e.target.dataset.pick;
+  if (pick !== undefined) {
+    const a = Q.addons[pick], v = e.target.value;
+    a.picks = e.target.checked ? [...a.picks, v] : a.picks.filter(x => x !== v);
+    return renderEditor();
+  }
+  const k = e.target.dataset.k; if (!k) return;
+  if (k === '_addon') { if (e.target.value) Q.addons.push(newAddon(e.target.value)); return renderEditor(); }
+  setPath(k, e.target.type === 'checkbox' ? e.target.checked : k === 'discount' ? (Number(e.target.value) || 100) : e.target.value);
+  if (k === 'fullPay') return renderEditor();
+
+  // 換品項／方案時帶入對應單價，並重畫編輯區
+  const m = k.match(/^addons\.(\d+)\.(item|tier)$/);
+  if (m) {
+    const a = Q.addons[m[1]];
+    if (a.cat === 'drink') { const d = CONFIG.drinks[a.item]; a.unit = d.unit; if (!d.temps.includes(a.temp)) a.temp = d.temps[0]; }
+    if (a.cat === 'equip') a.unit = CONFIG.equipment[a.item].unit;
+    if (a.cat === 'other' && a.item !== '') Object.assign(a, { zh:CONFIG.others[a.item].zh, en:CONFIG.others[a.item].en, unit:CONFIG.others[a.item].unit });
+    if (a.cat === 'pastry') { a.unit = Number(a.tier); a.picks = a.picks.filter(z => allPastries().find(p => p.zh === z)?.tiers.includes(a.unit)); }
+    return renderEditor();
+  }
+  renderPreview();
+});
+
+// 預覽表格的品名與說明
+function addonText(a, L) {
+  const t = T[L], each = `${a.qty} × ${money(a.unit)}`;
+  if (a.cat === 'drink') {
+    const d = CONFIG.drinks[a.item], temp = a.temp === '冰' ? t.iced : t.hot;
+    return [L === 'zh' ? `${d.zh}・${temp}` : `${d.en} (${temp})`, `${a.qty} ${t.bucket} × ${money(a.unit)}<br>${CONFIG.drinkNote[L]}`];
+  }
+  if (a.cat === 'pastry') {
+    const names = a.picks.map(z => {
+      const p = allPastries().find(x => x.zh === z); if (!p) return z;
+      const f = p.flavors?.[a.flavor];
+      return L === 'zh' ? p.zh + (f ? `（${f[0]}）` : '') : (f ? `${f[1]} ` : '') + p.en;
+    }).join(L === 'zh' ? '、' : ', ');
+    return [t.pastry(a.unit), `${t.pastryDesc(a.picks.length, esc(names))}<br>${a.qty} ${t.person} × ${money(a.unit)}`];
+  }
+  if (a.cat === 'meal') return [a[L] || a.zh, `${a.qty} ${t.person} × ${money(a.unit)}`];
+  if (a.cat === 'equip') return [CONFIG.equipment[a.item][L], each];
+  return [a[L] || a.zh, each];
+}
+// 新增場地沿用上一筆的日期、時間、國定假日設定
+function addLine() {
+  const prev = Q.lines.at(-1);
+  Q.lines.push(prev ? { ...blankLine(), date:prev.date, start:prev.start, end:prev.end, holiday:prev.holiday } : blankLine());
+  renderEditor();
+}
+// 複製整張場地卡（含議價），日期加一天，插在原卡下方
+function dupLine(i) {
+  const l = Q.lines[i], d = l.date ? new Date(l.date + 'T00:00') : null;
+  if (d) d.setDate(d.getDate() + 1);
+  const date = d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : '';
+  Q.lines.splice(i + 1, 0, { ...l, date });
+  renderEditor();
+}
+const del = (list, i) => { Q[list].splice(i, 1); renderEditor(); };
+
+// ---------- preview ----------
+function renderPreview() {
+  const C = Q.lang === "zh" ? "：" : ": ";
+  const L = Q.lang, t = T[L], tot = totals(Q, CONFIG), lessor = CONFIG.lessor, c = Q.client;
+  Q.lines.forEach((l, i) => {
+    const p = standardPrice(l, CONFIG), el = document.getElementById('std-' + i);
+    if (el) el.textContent = p ? `標準價 ${money(p.amount)}：${p.zh}` : (CONFIG.spaces.find(s => s.id === l.space)?.rule === 'manual' ? '此空間尚無正式價，請輸入議價金額' : '填日期與時間後計算標準價');
+  });
+  // 同一場地的多個日期排在一起（場地依第一次出現的順序，組內依日期時間），場地名只寫一次
+  const order = [...new Set(Q.lines.map(l => l.space))];
+  const sorted = [...Q.lines].sort((a, b) => order.indexOf(a.space) - order.indexOf(b.space) || (a.date + a.start).localeCompare(b.date + b.start));
+  const rows = sorted.map((l, i) => {
+    const sp = CONFIG.spaces.find(s => s.id === l.space);
+    const span = sorted.filter(x => x.space === l.space).length;
+    const first = i === 0 || sorted[i - 1].space !== l.space;
+    const time = l.start && l.end ? `${l.start}–${l.end}` : '';
+    return `<tr>${first ? `<td rowspan="${span}">${esc(sp[L])}</td>` : ''}<td class="date">${shortDate(l.date)}</td><td>${time}</td><td class="amt">${money(lineAmount(l, CONFIG))}</td></tr>`;
+  });
+  if (tot.discount) rows.push(`<tr><td>${t.disc}</td><td></td><td>${t.discDesc(Q.discount)}</td><td class="amt">−${money(tot.discount)}</td></tr>`);
+  Q.addons.forEach(a => {
+    const [name, desc] = addonText(a, L);
+    rows.push(`<tr><td>${esc(name)}</td><td></td><td>${desc}${a.note ? "<br>" + esc(a.note) : ""}</td><td class="amt">${money(a.qty * a.unit)}</td></tr>`);
+  });
+  const payment = (Q.fullPay ? t.payFull : t.payDep)(tot.deposit.toLocaleString('en-US'));
+  // 全額付款時，退改規則的「訂金」改寫成「已付款項」
+  const paid = x => Q.fullPay ? t.paidSwap.reduce((s, [a, b]) => s.replaceAll(a, b), x) : x;
+  const terms = CONFIG.terms[L].map(s => Array.isArray(s) ? s.map(paid) : s.replace('{valid}', Q.validDays).replace('{payWhen}', Q.payBy ? t.payBy(longDate(Q.payBy, L)) : t.payIn(Q.payDays ?? 7)).replace('{payment}', payment));
+  if (Q.note) terms.push(Q.note);
+  const party = (title, name, rows) => `<div><b>${title}${C}${esc(name)}</b>${rows.filter(r => r[1]).map(r => `${r[0]}${C}${esc(r[1])}`).join('<br>')}</div>`;
+
+  document.getElementById('paper').innerHTML = `
+    <h1>${t.title}</h1>
+    <div class="meta"><span>${esc(Q.event)}</span><span>${t.date}${C}${longDate(Q.date, L)}</span></div>
+    <div class="parties">
+      ${party(t.client, c.name, [[t.taxId, c.taxId], [t.contact, c.contact], [t.phone, c.phone], [t.email, c.email], [t.addr, c.address]])}
+      ${party(t.lessor, lessor[L], [[t.taxId, lessor.taxId], [t.rep, L === 'zh' ? lessor.repZh : lessor.repEn], [t.email, lessor.email], [t.phone, lessor.phone], [t.addr, L === 'zh' ? lessor.addrZh : lessor.addrEn]])}
+    </div>
+    <table>
+      <tr><th style="width:30%">${t.item}</th><th style="width:13%">${t.day}</th><th>${t.desc}</th><th class="amt" style="width:16%">${t.amt}</th></tr>
+      ${rows.join('')}
+    </table>
+    <table class="sum" style="width:50%;margin-left:auto;margin-top:6px">
+      <tr><td>${t.net}</td><td class="amt">${money(tot.net)}</td></tr>
+      <tr><td>${t.tax}</td><td class="amt">${money(tot.tax)}</td></tr>
+      <tr class="big"><td>${t.total}</td><td class="amt">${money(tot.total)}</td></tr>
+      ${Q.fullPay ? '' : `<tr><td>${t.deposit}</td><td class="amt">${money(tot.deposit)}</td></tr>
+      <tr><td>${t.balance}</td><td class="amt">${money(tot.balance)}</td></tr>`}
+    </table>
+    <div class="terms"><b>${t.terms}</b><ol>${terms.map(s => Array.isArray(s)
+      ? `<li>${esc(s[0])}<ul style="margin:2px 0;padding-left:16px">${s.slice(1).map(x => `<li>${esc(x)}</li>`).join('')}</ul></li>`
+      : `<li>${esc(s)}</li>`).join('')}</ol></div>
+    <div class="bank"><b>${t.bank}</b><br>${t.bankL}${C}${L === 'zh' ? lessor.bankZh : lessor.bankEn}<br>${t.acct}${C}${lessor.account}<br>${t.acctName}${C}${lessor.accountName}</div>
+    <div class="sign">
+      <div>${t.client}<div class="ln"></div>${t.sign}</div>
+      <div>${t.lessor}<div class="ln"></div>${t.sign}</div>
+    </div>`;
+}
+
+// ---------- files ----------
+function fileName() {
+  const d = (Q.lines.find(l => l.date)?.date || Q.date).replace(/-/g, '');
+  return Q.lang === 'zh' ? `可能存在的遊樂園_${d}${Q.event}報價單` : `CollaPlay_${d}_${Q.event}_Quotation`;
+}
+function printPdf() { const old = document.title; document.title = fileName(); window.print(); document.title = old; }
+function saveJson() {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(Q, null, 2)], { type:'application/json' }));
+  a.download = fileName() + '.json'; a.click();
+}
+loader.onchange = async e => {
+  try { Q = { ...Q, ...JSON.parse(await e.target.files[0].text()) }; renderEditor(); }
+  catch { alert('無法讀取這個 JSON 檔'); }
+  e.target.value = '';
+};
+
+renderEditor();
+</script>
+</body>
+</html>

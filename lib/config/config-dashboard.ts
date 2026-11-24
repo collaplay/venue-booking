@@ -3,6 +3,7 @@ import {
   Building2,
   FolderKanban,
   Users,
+  FileText,
 } from "lucide-react";
 import { DASHBOARD_NEW_LABELS } from "../message";
 
@@ -36,6 +37,7 @@ export const dashboardNavigation: DashboardNavItem[] = [
     label: DASHBOARD_NEW_LABELS.users,
     icon: Users,
   },
+  { href: "/dashboard/quote", label: "報價單", icon: FileText },
 ];
 
 // Modern SaaS Color Palette
