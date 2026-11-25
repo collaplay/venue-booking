@@ -301,8 +301,21 @@ model Project {
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
   rentals             ProjectRental[]
+  quoteDraft          ProjectQuoteDraft?
 
   @@map("project")
+}
+
+// 報價單草稿：每個專案只留最新一份（/dashboard/quote?project=<id> 的「儲存到專案」）
+// 獨立一張表，不在 project 加欄位：表還沒建好時只有草稿功能受影響，不會拖垮專案查詢
+model ProjectQuoteDraft {
+  projectId String   @id
+  data      Json     @db.JsonB // 報價單工具的完整表單狀態（quote-tool/index.html 的 Q）
+  updatedBy String? // 最後儲存者姓名（顯示用）
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_quote_draft")
 }
 
 // 專案租借項目（一專案多筆）

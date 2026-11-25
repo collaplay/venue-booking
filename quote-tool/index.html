@@ -133,8 +133,8 @@ function renderEditor() {
     <div class="bar">
       ${sel('lang', Q.lang, [['zh', '中文版'], ['en', 'English']])}
       <button onclick="printPdf()">列印／存 PDF</button>
-      <button onclick="saveJson()">存檔 JSON</button>
-      <button onclick="loader.click()">開啟 JSON</button>
+      <button onclick="saveJson()" title="把目前填的內容存成檔案下載到這台電腦，之後可以開啟接著改">儲存草稿</button>
+      <button onclick="loader.click()" title="選擇之前用「儲存草稿」下載的檔案，接著修改">開啟草稿</button>
     </div>
     <h3>報價資訊</h3>
     <div class="row"><div><label>報價日期</label>${inp('date', Q.date, 'date')}</div><div><label>報價有效天數</label>${inp('validDays', Q.validDays, 'number')}</div><div><label>確認後幾天內匯款</label>${inp('payDays', Q.payDays, 'number')}</div></div>
@@ -316,7 +316,7 @@ function saveJson() {
 }
 loader.onchange = async e => {
   try { Q = { ...Q, ...JSON.parse(await e.target.files[0].text()) }; renderEditor(); }
-  catch { alert('無法讀取這個 JSON 檔'); }
+  catch { alert('無法讀取這個檔案，請選擇用「儲存草稿」下載的檔案'); }
   e.target.value = '';
 };
 
