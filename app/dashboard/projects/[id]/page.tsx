@@ -13,7 +13,7 @@ import { getAdminContactOptions } from "@/lib/services/admin-contact.service";
 import { PROJECT_DETAIL_PAGE } from "@/lib/message";
 import { ProjectDetailContent } from "./project-detail-content.client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
 import {
   buildLoginUrlWithNext,
   buildPathWithSearch,
@@ -78,12 +78,21 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
       />
 
       <div className="min-w-0 flex-1 p-6 flex flex-col gap-6">
-        <Link href="/dashboard/projects" className="self-start">
-          <Button variant="ghost" size="sm" className="gap-2">
-            <ArrowLeft className="size-4" />
-            {PROJECT_DETAIL_PAGE.buttonBackToList}
+        <div className="flex items-center justify-between gap-2">
+          <Link href="/dashboard/projects">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <ArrowLeft className="size-4" />
+              {PROJECT_DETAIL_PAGE.buttonBackToList}
+            </Button>
+          </Link>
+          {/* 報價單頁是 route handler 送出的獨立網頁，用一般連結開新分頁 */}
+          <Button asChild variant="outline" size="sm" className="gap-2">
+            <a href={`/dashboard/quote?project=${id}`} target="_blank" rel="noopener">
+              <FileText className="size-4" />
+              建立報價單
+            </a>
           </Button>
-        </Link>
+        </div>
 
         <Suspense fallback={<ProjectDetailSkeleton />}>
           <ProjectDetail id={id} />
