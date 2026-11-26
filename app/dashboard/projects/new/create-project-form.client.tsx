@@ -1,5 +1,6 @@
 "use client";
 
+import { RentalPriceNoteField, RentalPricingFields } from "@/components/features/project/rental-pricing-fields";
 import * as React from "react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -1067,6 +1068,7 @@ export function CreateProjectForm({
                   </div>
                 ) : null}
 
+                <RentalPricingFields prefix={`rentals.${index}.`} discountSameAsFirst={index > 0} />
                 <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {/* 場租金額 */}
                   <FormField
@@ -1142,7 +1144,7 @@ export function CreateProjectForm({
                               }
                             />
                           </FormControl>
-                          <FormLabel className="font-normal leading-none">
+                          <FormLabel className="font-normal leading-none text-xs whitespace-nowrap">
                             {CREATE_PROJECT_PAGE.labelFnbAmountPending}
                           </FormLabel>
                         </FormItem>
@@ -1197,6 +1199,7 @@ export function CreateProjectForm({
                     </div>
                   </FormItem>
                 </div>
+                <RentalPriceNoteField prefix={`rentals.${index}.`} />
               </div>
             ))}
 

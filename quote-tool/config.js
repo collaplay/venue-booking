@@ -19,13 +19,13 @@ const CONFIG = {
 
   // rule: hall＝價目表 v2 A/B 方案；photo＝Tik & Sip 攝影；manual＝尚無正式價，手動輸入
   spaces: [
-    { id: 'workshop', zh: '4F《空白分頁》多功能教室', en: '4F Workshop Room', rule: 'hall' },
-    { id: 'event', zh: '5F《大氣層》展演空間', en: '5F Event Hall', rule: 'hall' },
-    { id: 'bar', zh: '4F《Tik & Sip》葡萄酒吧', en: '4F Tik & Sip Wine Bar', rule: 'photo' },
+    { id: 'workshop', zh: '4F 多功能教室', en: '4F Workshop Room', rule: 'hall' },
+    { id: 'event', zh: '5F 展演空間', en: '5F Event Hall', rule: 'hall' },
+    { id: 'bar', zh: '4F Tik & Sip 葡萄酒吧', en: '4F Tik & Sip Wine Bar', rule: 'photo' },
     { id: 'lounge', zh: '4F 交誼廳', en: '4F Social Lounge', rule: 'manual' },
-    { id: 'podcast', zh: '4F《水下的聲音》Podcast 錄音室', en: '4F Podcast Studio', rule: 'manual' },
+    { id: 'podcast', zh: '4F Podcast 錄音室', en: '4F Podcast Studio', rule: 'manual' },
     { id: 'media', zh: '4F 播映室', en: '4F Media Room', rule: 'manual' },
-    { id: 'cafe', zh: '3F《頻率交流道》社群咖啡館', en: '3F Community Café', rule: 'manual' }, // 官網無英文名，暫定
+    { id: 'cafe', zh: '3F 社群咖啡館', en: '3F Community Café', rule: 'manual' }, // 官網無英文名，暫定
   ],
 
   // 價目表 v2（2026-05-15）
@@ -81,7 +81,7 @@ const CONFIG = {
         '活動 30 日前取消：退還訂金 80%，或可選擇免費改期乙次。',
         '活動 29 日至 15 日前取消：退還訂金 50%，或可選擇免費改期乙次。',
         '活動 14 日（含）內取消：不予改期，亦不退還訂金。',
-        '免費改期：活動 15 日前通知可免費改期乙次。改期之新日期必須在原活動日起算半年內使用完畢。已改期之訂單恕不受理取消退款。',
+        '免費改期：活動 15 日前通知可改期乙次，新日期須在原活動日起半年內；改期後恕不受理取消退款。',
         '天候因素：活動當日如遇台北市政府宣布停止上班，可免費改期乙次，或全額退還訂金。',
         '場地方因素：如因 CollaPlay 因素致無法如期提供場地，將全額退還已付訂金，或依您的意願協助改期。'],
       '主辦方需自行完成場復，並通知空間夥伴確認。如有家具、場地、設備損壞之情事，將收取維修清潔費用。',
@@ -95,7 +95,7 @@ const CONFIG = {
         'Cancellation 30 or more days before the event: 80% of the deposit is refunded, or you may choose one free reschedule.',
         'Cancellation 29 to 15 days before the event: 50% of the deposit is refunded, or you may choose one free reschedule.',
         'Cancellation within 14 days of the event (inclusive): no rescheduling, and the deposit is non-refundable.',
-        'Free reschedule: One free reschedule is allowed with notice given at least 15 days before the event. The new date must fall within six months of the original event date. Rescheduled bookings are not eligible for cancellation or refund.',
+        'Free reschedule: One reschedule is allowed with at least 15 days\' notice. The new date must fall within six months of the original event date. Rescheduled bookings cannot be cancelled or refunded.',
         'Weather: If the Taipei City Government announces a suspension of work on the event day, you may reschedule once free of charge or receive a full refund of the deposit.',
         'Venue: If CollaPlay is unable to provide the venue as scheduled, the deposit paid will be refunded in full, or we will help you reschedule at your preference.'],
       'The Client is responsible for restoring the venue after the event and having it checked by our staff. Any damage to furniture, premises or equipment will incur repair and cleaning charges.',

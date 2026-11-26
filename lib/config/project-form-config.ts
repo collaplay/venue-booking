@@ -49,6 +49,9 @@ export const rentalItemSchema = z
     fnbAmount: z.coerce.number().min(0),
     fnbAmountPending: z.boolean().default(false),
     paidAmount: z.coerce.number().min(0),
+    pricePlan: z.enum(["A", "B"]).default("A"),
+    isHoliday: z.boolean().default(false),
+    priceNote: z.string().optional().default(""),
   })
   .refine(
     (data) =>
@@ -107,6 +110,14 @@ export const projectFormSchema = z
     collaPlayContactId: z.string().min(1, CREATE_PROJECT_PAGE.errorRequired),
     internalNotes: z.string().optional(),
     needsPrintedNotice: z.boolean(CREATE_PROJECT_PAGE.errorRequired),
+    // 長期合作折扣：空字串＝無；85＝85 折
+    discountPercent: z
+      .string()
+      .optional()
+      .default("")
+      .refine((s) => !s.trim() || (/^\d{1,2}$/.test(s.trim()) && Number(s) >= 1), {
+        message: "請輸入 1–99 的整數（85＝85 折），沒有折扣請留空",
+      }),
     rentals: z.array(rentalItemSchema).min(1, CREATE_PROJECT_PAGE.errorRequired),
   })
   .superRefine((data, ctx) => {
@@ -167,6 +178,9 @@ export const DEFAULT_RENTAL_FORM_VALUES: ProjectFormValues["rentals"][0] = {
   fnbAmount: 0,
   fnbAmountPending: false,
   paidAmount: 0,
+  pricePlan: "A",
+  isHoliday: false,
+  priceNote: "",
 };
 
 export function defaultProjectFormValues(): ProjectFormValues {
@@ -186,6 +200,7 @@ export function defaultProjectFormValues(): ProjectFormValues {
     collaPlayContactId: "",
     internalNotes: "",
     needsPrintedNotice: undefined as unknown as boolean,
+    discountPercent: "",
     rentals: [{ ...DEFAULT_RENTAL_FORM_VALUES }],
   };
 }
@@ -206,6 +221,9 @@ export function rentalToFormValues(
     fnbAmount: r.fnbAmount,
     fnbAmountPending: r.fnbAmountPending ?? false,
     paidAmount: r.paidAmount,
+    pricePlan: r.pricePlan === "B" ? "B" : "A",
+    isHoliday: r.isHoliday ?? false,
+    priceNote: r.priceNote ?? "",
   };
 }
 
@@ -229,6 +247,7 @@ export function projectToFormValues(project: ProjectWithRentals): ProjectFormVal
     collaPlayContactId: project.collaPlayContactId,
     internalNotes: project.internalNotes ?? "",
     needsPrintedNotice: project.needsPrintedNotice ?? true,
+    discountPercent: project.discountPercent != null ? String(project.discountPercent) : "",
     rentals:
       project.rentals.length > 0
         ? project.rentals.map((r) => rentalToFormValues(r))
@@ -271,6 +290,7 @@ export function formValuesToCreateInput(values: ProjectFormValues): CreateProjec
       activityCustomDetail ?? "",
     ),
     customerPhone: values.customerPhone ?? "",
+    discountPercent: values.discountPercent?.trim() ? Number(values.discountPercent) : null,
     rentals: mapRentalsToPayload(values.rentals),
   };
 }
