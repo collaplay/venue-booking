@@ -23,10 +23,10 @@ interface PageProps {
 
 export default async function LoginPage({ searchParams }: PageProps) {
   const h = await headers();
-  // 若已登入，則導向個人資料頁面
+  // 若已登入，直接進後台（非管理員會再被導到個人資料頁）
   const session = await auth.api.getSession({ headers: h });
   if (session?.user) {
-    redirect("/profile");
+    redirect("/dashboard");
   }
 
   const sp = searchParams ? await searchParams : undefined;
@@ -38,7 +38,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
 
   return (
     <SectionContainer>
-      <LoginForm redirectTo={next ?? returnTo ?? "/profile"} />
+      <LoginForm redirectTo={next ?? returnTo ?? "/dashboard"} />
     </SectionContainer>
   );
 }

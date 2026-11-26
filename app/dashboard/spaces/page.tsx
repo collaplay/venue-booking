@@ -42,7 +42,7 @@ export default async function SpacesPage({ searchParams }: PageProps) {
     select: { isAdmin: true },
   });
   if (!user?.isAdmin) {
-    redirect("/");
+    redirect("/profile");
   }
 
   const now = new Date();

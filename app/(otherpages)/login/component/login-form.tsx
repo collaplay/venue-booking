@@ -79,9 +79,6 @@ export default function LoginForm({ redirectTo = "/profile" }: LoginFormProps) {
       title="登入"
       description="請登入您的帳號以繼續"
       error={error}
-      footerText="還沒有帳號？"
-      footerLinkText="註冊"
-      footerLinkHref="/register"
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

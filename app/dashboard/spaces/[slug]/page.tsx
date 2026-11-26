@@ -67,7 +67,7 @@ export default async function SpaceDetailPage({ params, searchParams }: PageProp
     select: { isAdmin: true },
   });
   if (!user?.isAdmin) {
-    redirect("/");
+    redirect("/profile");
   }
 
   const redirectTarget = DEPRECATED_SPACE_REDIRECT[slug];
