@@ -107,13 +107,13 @@ export function AdminSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="返回首頁">
+            <SidebarMenuButton asChild tooltip="個人資料／登出">
               <Link
-                href="/"
+                href="/profile"
                 className="gap-2 text-muted-foreground hover:text-foreground"
               >
                 <Home className="h-4 w-4" />
-                <span>返回首頁</span>
+                <span>個人資料／登出</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

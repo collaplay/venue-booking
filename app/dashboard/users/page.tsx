@@ -31,7 +31,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
     select: { isAdmin: true },
   });
   if (!user?.isAdmin) {
-    redirect("/");
+    redirect("/profile");
   }
 
   return (

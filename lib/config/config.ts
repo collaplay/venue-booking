@@ -5,7 +5,6 @@ import {
   Home,
   Instagram,
   Facebook,
-  Info,
 } from "lucide-react";
 import {
   STORE_MESSAGES,
@@ -40,8 +39,6 @@ export const STORE_CONFIG = {
 // クイックリンク設定
 export const PAGE_LINKS = [
   { label: NAV_LABELS.home, href: "/", icon: Home },
-  { label: NAV_LABELS.about, href: "/about", icon: Info },
-  { label: NAV_LABELS.calendar, href: "/calendar", icon: Calendar },
 ];
 
 // ソーシャルリンク設定

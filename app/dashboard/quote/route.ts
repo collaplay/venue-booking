@@ -58,7 +58,7 @@ export async function GET(request: Request) {
   const { pathname, search, searchParams } = new URL(request.url);
   const admin = await getAdmin();
   if (admin === null) redirect(buildLoginUrlWithNext(pathname + search));
-  if (!admin) redirect("/");
+  if (!admin) redirect("/profile");
 
   const config = read("config.js").replace(
     "__QUOTE_BANK_ACCOUNT__",

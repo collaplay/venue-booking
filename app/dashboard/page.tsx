@@ -42,7 +42,7 @@ export default async function DashboardNewPage({ searchParams }: PageProps) {
     select: { isAdmin: true },
   });
   if (!user?.isAdmin) {
-    redirect("/");
+    redirect("/profile");
   }
 
   const [recentProjects, upcomingProjects, stats] = await Promise.all([

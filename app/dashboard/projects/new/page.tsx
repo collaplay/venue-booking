@@ -63,7 +63,7 @@ export default async function NewProjectPage({ searchParams }: PageProps) {
     select: { isAdmin: true },
   });
   if (!user?.isAdmin) {
-    redirect("/");
+    redirect("/profile");
   }
 
   const adminOptions = await getAdminContactOptions();
