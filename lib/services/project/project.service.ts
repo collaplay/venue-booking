@@ -32,6 +32,7 @@ import {
   spaceIdsIntersect,
 } from "@/lib/utils/project-rental-interval";
 import {
+  addDaysToTaipeiYmd,
   getEffectiveProjectStatus,
   getTaipeiTodayYmd,
 } from "@/lib/utils/project-effective-status";
@@ -253,6 +254,7 @@ function mapRowToProject(
     internalNotes: string | null;
     needsPrintedNotice: boolean;
     equipmentNeeds: unknown;
+    createdAt: Date;
     rentals: Array<{
       spaceIds: string[];
       date: string;
@@ -302,6 +304,7 @@ function mapRowToProject(
     eventType: row.eventType,
     space,
     date,
+    createdAt: row.createdAt.toISOString(),
     contactPerson:
       adminNameById.get(row.collaPlayContactId) ?? row.collaPlayContactId,
     amount,
@@ -447,13 +450,58 @@ export async function getProjectsForList(): Promise<Project[]> {
 }
 
 /**
- * 取得最近 N 筆專案（供總覽頁使用，以 React.cache 去重）
+ * 取得最近 createdWithinDays 天內新增的專案（供總覽頁使用，以 React.cache 去重）
  */
 export const getRecentProjects = cache(
-  async (limit: number): Promise<Project[]> => {
+  async (createdWithinDays: number): Promise<Project[]> => {
+    const todayYmd = getTaipeiTodayYmd();
+    const createdSinceYmd = addDaysToTaipeiYmd(todayYmd, -createdWithinDays);
     const [rows, adminOptions] = await Promise.all([
       prisma.project.findMany({
-        take: limit,
+        where: {
+          AND: [
+            { rentals: { none: { spaceIds: { has: "4f-podcast-studio" } } } },
+            {
+              rentals: {
+                some: {
+                  OR: [
+                    { endDate: { gte: todayYmd } },
+                    { endDate: null, date: { gte: todayYmd } },
+                  ],
+                },
+              },
+            },
+          ],
+          createdAt: { gte: new Date(`${createdSinceYmd}T00:00:00+08:00`) },
+        },
+        orderBy: { createdAt: "desc" },
+        include: { rentals: true },
+      }),
+      getAdminContactOptions(),
+    ]);
+    const adminNameById = new Map(adminOptions.map((o) => [o.id, o.name]));
+    return rows.map((row) => mapRowToProject(row, adminNameById));
+  },
+);
+
+/**
+ * 取得最近 createdWithinDays 天內新增、且活動日期落在未來 windowDays 天內的專案
+ * （供總覽頁使用，以 React.cache 去重）
+ */
+export const getRecentUpcomingProjects = cache(
+  async (windowDays: number, createdWithinDays: number): Promise<Project[]> => {
+    const fromYmd = getTaipeiTodayYmd();
+    const toYmd = addDaysToTaipeiYmd(fromYmd, windowDays);
+    const createdSinceYmd = addDaysToTaipeiYmd(fromYmd, -createdWithinDays);
+    const [rows, adminOptions] = await Promise.all([
+      prisma.project.findMany({
+        where: {
+          AND: [
+            buildProjectsWindowWhere({ fromYmd, toYmd }),
+            { rentals: { none: { spaceIds: { has: "4f-podcast-studio" } } } },
+            { createdAt: { gte: new Date(`${createdSinceYmd}T00:00:00+08:00`) } },
+          ],
+        },
         orderBy: { createdAt: "desc" },
         include: { rentals: true },
       }),
@@ -568,6 +616,7 @@ export async function getCachedProjectById(
           collaPlayContactId: true,
           internalNotes: true,
           needsPrintedNotice: true,
+          discountPercent: true,
           equipmentNeeds: true,
           status: true,
           createdAt: true,
@@ -588,6 +637,10 @@ export async function getCachedProjectById(
               paidAmount: true,
               pendingAmount: true,
               spaceIds: true,
+              // 計價資訊：漏列的話編輯表單會讀不到，存檔時就被清空
+              pricePlan: true,
+              isHoliday: true,
+              priceNote: true,
             },
           },
         },
@@ -626,6 +679,25 @@ async function getProjectsBySpaceIdImpl(spaceId: string): Promise<Project[]> {
 }
 
 export const getProjectsBySpaceId = cache(getProjectsBySpaceIdImpl);
+
+/** 計價資訊欄位正規化（方案只收 A／B；議價理由空字串存 null） */
+function rentalPricingFieldsForDb(r: {
+  pricePlan?: string;
+  isHoliday?: boolean;
+  priceNote?: string | null;
+}) {
+  return {
+    pricePlan: r.pricePlan === "B" ? "B" : "A",
+    isHoliday: r.isHoliday ?? false,
+    priceNote: r.priceNote?.trim() || null,
+  };
+}
+
+/** 長期合作折扣正規化：1–99 的整數才算折扣，其餘（含 100）存 null */
+function discountPercentForDb(v: number | null | undefined): number | null {
+  const n = Math.round(Number(v));
+  return n >= 1 && n <= 99 ? n : null;
+}
 
 /**
  * 更新專案（主檔 + 租借項目）
@@ -673,6 +745,9 @@ export async function updateProject(
           needsPrintedNotice: input.needsPrintedNotice,
         }),
         ...(input.status != null && { status: input.status }),
+        ...(input.discountPercent !== undefined && {
+          discountPercent: discountPercentForDb(input.discountPercent),
+        }),
         ...(input.equipmentNeeds !== undefined && {
           equipmentNeeds: equipmentNeedsToPrismaInput(
             normalizeEquipmentNeedsForDb(input.equipmentNeeds),
@@ -693,6 +768,7 @@ export async function updateProject(
           teardownMinutesAfter: r.teardownMinutesAfter ?? 30,
           rentalAmount: Math.max(0, Math.round(r.rentalAmount)),
           ...fnbFields,
+          ...rentalPricingFieldsForDb(r),
           paidAmount: Math.max(0, Math.round(r.paidAmount)),
           pendingAmount: computeProjectRentalPendingAmount({
             rentalAmount: r.rentalAmount,
@@ -770,6 +846,7 @@ export async function updateProjectRental(
       teardownMinutesAfter: input.teardownMinutesAfter ?? 30,
       rentalAmount: Math.max(0, Math.round(input.rentalAmount)),
       ...fnbFields,
+      ...rentalPricingFieldsForDb(input),
       paidAmount: Math.max(0, Math.round(input.paidAmount)),
       pendingAmount: computeProjectRentalPendingAmount({
         rentalAmount: input.rentalAmount,
@@ -845,6 +922,7 @@ export async function createProject(
         collaPlayContactId: input.collaPlayContactId,
         internalNotes: input.internalNotes ?? null,
         needsPrintedNotice: input.needsPrintedNotice ?? false,
+        discountPercent: discountPercentForDb(input.discountPercent),
         equipmentNeeds: equipmentNeedsToPrismaInput(
           normalizeEquipmentNeedsForDb(input.equipmentNeeds),
         ),
@@ -865,6 +943,7 @@ export async function createProject(
           teardownMinutesAfter: r.teardownMinutesAfter ?? 30,
           rentalAmount: Math.max(0, Math.round(r.rentalAmount)),
           ...fnbFields,
+          ...rentalPricingFieldsForDb(r),
           paidAmount: Math.max(0, Math.round(r.paidAmount)),
           pendingAmount: computeProjectRentalPendingAmount({
             rentalAmount: r.rentalAmount,

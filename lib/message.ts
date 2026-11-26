@@ -170,10 +170,11 @@ export const SPACE_DETAIL_PAGE = {
 
 // Dashboard Overview (總覽頁區塊)
 export const DASHBOARD_OVERVIEW = {
-  spacesSectionTitle: "場域列表",
-  recentProjectsTitle: "最近專案",
+  recentProjectsTitle: "最近新增專案",
+  recentProjectsFilterNote: "僅顯示最近 14 天內新增、且活動尚未發生的專案",
+  upcomingProjectsTitle: "未來 28 天新增活動專案",
+  upcomingProjectsFilterNote: "最近 14 天內新增．活動日期在未來 28 天內",
   seeAll: "查看全部",
-  seeAllSpacesAria: "查看全部場域",
   seeAllProjectsAria: "查看全部專案",
   noProjectsYet: "尚無專案",
   // 總覽統計四項
@@ -347,6 +348,8 @@ export const CREATE_PROJECT_PAGE = {
   submitting: "儲存中…",
   removeRental: "移除",
   removeRentalAria: "移除此筆租借",
+  copyRental: "複製",
+  copyRentalAria: "複製此筆租借",
 
   errorRequired: "此欄位為必填",
   errorActivityTypeRequired: "請選擇活動類型",

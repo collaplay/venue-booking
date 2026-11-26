@@ -16,30 +16,42 @@
   .row { display:flex; gap:6px; } .row > * { flex:1; }
   .card { border:1px solid var(--line); border-radius:8px; padding:8px; margin-bottom:8px; }
   .std { color:var(--muted); font-size:12px; margin-top:4px; }
+  #editor input.ro { background:#f6f4f0; color:var(--muted); cursor:not-allowed; }
   button { padding:7px 12px; border:0; border-radius:6px; background:#222; color:#fff; font:inherit; cursor:pointer; }
   button.ghost { background:none; color:#a33; padding:2px 6px; }
   .bar { display:flex; gap:6px; flex-wrap:wrap; }
-  #paper { width:210mm; min-height:297mm; background:#fff; padding:16mm 15mm; font-size:10.5pt; line-height:1.55; box-shadow:0 2px 12px rgba(0,0,0,.08); }
+  /* 固定兩頁：第 1 頁報價明細、第 2 頁備註與簽章；每頁（.sheet）是一張 A4，logo 靠 margin-top:auto 貼在頁尾 */
+  #paper { width:210mm; font-size:10.5pt; line-height:1.55; }
+  .sheet { background:#fff; min-height:297mm; padding:25mm 15mm 10mm; display:flex; flex-direction:column; box-shadow:0 2px 12px rgba(0,0,0,.08); margin-bottom:24px; }
+  #paper .logo { display:block; height:20mm; margin:auto auto 0; padding-top:8mm; box-sizing:content-box; break-inside:avoid; }
   #paper h1 { font-size:17pt; text-align:center; margin:0 0 4px; letter-spacing:1px; }
-  .meta { display:flex; justify-content:space-between; color:var(--muted); font-size:9.5pt; margin-bottom:12px; }
-  .parties { display:flex; gap:16px; margin-bottom:12px; font-size:9.5pt; }
-  .parties > div { flex:1; border-top:2px solid var(--accent); padding-top:6px; }
-  .parties b { display:block; margin-bottom:2px; }
+  #paper { --brand:#EAA45D; }
+  .head { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid var(--brand); padding-bottom:10px; margin-bottom:16px; }
+  #paper .head h1 { font-size:17pt; white-space:nowrap; text-align:left; margin:0; letter-spacing:2px; line-height:1.2; }
+  .head .en { font-family:'Gill Sans','Gill Sans MT',sans-serif; font-size:8.5pt; letter-spacing:3px; color:var(--muted); margin-top:4px; }
+  .head .meta { text-align:right; font-size:9pt; color:var(--muted); line-height:1.7; } .head .meta b { color:var(--ink); font-weight:500; }
+  .event { font-size:11pt; font-weight:700; margin-bottom:12px; }
+  .parties { display:flex; gap:24px; margin-bottom:20px; font-size:9.5pt; line-height:1.75; }
+  .parties > div { flex:1; }
+  .parties .lbl { font-size:8pt; letter-spacing:2px; color:var(--muted); display:block; }
+  .parties b { display:block; margin-bottom:2px; font-size:10.5pt; }
   table { width:100%; border-collapse:collapse; font-size:9.5pt; }
-  th { background:#2b2b2b; color:#fff; font-weight:500; padding:6px; text-align:left; }
-  td { border-bottom:1px solid var(--line); padding:6px; vertical-align:top; }
+  th { color:var(--ink); font-weight:700; font-size:9pt; padding:7px 6px; text-align:left; border-top:1.5px solid var(--ink); border-bottom:1px solid var(--ink); }
+  td { border-bottom:1px solid var(--line); padding:9px 6px; vertical-align:top; }
   td.amt, th.amt { text-align:right; white-space:nowrap; }
   td.date { white-space:nowrap; }
   .sum td { border:0; padding:3px 6px; }
-  .sum .big td { font-weight:700; font-size:11pt; border-top:2px solid #222; padding-top:6px; }
-  .terms { font-size:9pt; margin-top:14px; } .terms ol { padding-left:18px; margin:4px 0; }
-  .bank { font-size:9pt; background:var(--bg); padding:8px 10px; border-radius:4px; margin-top:8px; }
-  .sign { display:flex; gap:24px; margin-top:28px; font-size:9.5pt; } .sign > div { flex:1; }
-  .sign .ln { border-bottom:1px solid #222; height:40px; }
-  @media (max-width: 1100px) { body { flex-direction:column; padding:16px; } #editor { width:100%; position:static; max-height:none; } #paper { width:100%; min-height:0; } }
+  .sum .big td { font-weight:700; font-size:13pt; border-top:1.5px solid var(--ink); border-bottom:2px solid var(--brand); padding:8px 6px; }
+  .sum .pay td { color:var(--muted); }
+  .terms { font-size:9.5pt; line-height:1.8; } .terms ol { padding-left:18px; margin:8px 0; } .terms li { margin-bottom:3px; } .terms > b { font-size:12pt; display:block; border-bottom:2px solid var(--brand); padding-bottom:8px; margin-bottom:10px; letter-spacing:2px; }
+  .bank { font-size:9.5pt; background:#FCF1E2; border-left:3px solid var(--brand); padding:10px 14px; border-radius:4px; margin-top:22px; line-height:1.75; }
+  .sign { display:flex; gap:32px; margin-top:40px; font-size:9.5pt; } .sign > div { flex:1; }
+  .pageno { position:absolute; right:15mm; bottom:12mm; font-size:8pt; color:var(--muted); font-family:'Gill Sans','Gill Sans MT',sans-serif; letter-spacing:1px; } .sheet { position:relative; }
+  .sign .ln { border-bottom:1px solid #222; height:64px; }
+  @media (max-width: 1100px) { body { flex-direction:column; padding:16px; } #editor { width:100%; position:static; max-height:none; } #paper { width:100%; } .sheet { min-height:0; } }
   @page { size:A4; margin:0; }
   /* Google Fonts 的 Noto Sans TC 是可變字型，Chrome 會把它轉成 Type3 嵌入，Acrobat 顯示空白；PingFang 同樣是可變字型。列印改用靜態的 Heiti TC */
-  @media print { body { font-family:'Heiti TC','Microsoft JhengHei',sans-serif; background:#fff; padding:0; display:block; } #editor { display:none; } #paper { box-shadow:none; width:210mm; min-height:0; } .sign, .bank, tr { break-inside:avoid; } }
+  @media print { body { font-family:'Heiti TC','Microsoft JhengHei',sans-serif; background:#fff; padding:0; display:block; } #editor { display:none; } #paper { width:210mm; } .sheet { box-shadow:none; margin:0; min-height:296.5mm; } .sheet + .sheet { break-before:page; } .sign, .bank, tr { break-inside:avoid; } }
 </style>
 </head>
 <body>
@@ -49,10 +61,11 @@
 <script src="config.js"></script>
 <script src="pricing.js"></script>
 <script>
-const today = new Date().toISOString().slice(0, 10);
+const LOGO = 'logo.png'; // 放在場租系統裡時，route.ts 會把它換成內嵌圖檔
+const today = new Date().toLocaleDateString('en-CA'); // 本地時區的 YYYY-MM-DD（toISOString 是 UTC，台灣早上 8 點前會變成前一天）
 const blankLine = () => ({ space:'workshop', plan:'A', date:'', start:'13:00', end:'16:00', holiday:false, override:'', reason:'' });
 let Q = {
-  lang:'zh', date:today, validDays:3, payDays:7, payBy:'', event:'',
+  lang:'zh', date:today, validDays:3, payDays:3, payBy:'', event:'',
   client:{ name:'', taxId:'', contact:'', phone:'', email:'', address:'' },
   lines:[blankLine()], discount:100, addons:[], depositManual:'', fullPay:false, note:'',
 };
@@ -125,6 +138,8 @@ const shortDate = d => d ? d.replace(/-0?/g, '/') : '';
 
 // ---------- editor ----------
 const inp = (k, v, type = 'text', extra = '') => `<input data-k="${k}" type="${type}" value="${esc(v)}" ${extra}>`;
+// 從專案帶入時，專案已有的欄位鎖住（正本在專案，這裡改了下次開啟也會被蓋回去）
+const pinp = (k, v) => Q.fromProject ? `<input value="${esc(v)}" readonly class="ro" title="來自專案，要修改請回專案編輯">` : inp(k, v);
 const sel = (k, v, opts) => `<select data-k="${k}">${opts.map(([val, txt]) => `<option value="${val}" ${val === v ? 'selected' : ''}>${esc(txt)}</option>`).join('')}</select>`;
 
 function renderEditor() {
@@ -132,21 +147,28 @@ function renderEditor() {
   document.getElementById('editor').innerHTML = `
     <div class="bar">
       ${sel('lang', Q.lang, [['zh', '中文版'], ['en', 'English']])}
-      <button onclick="printPdf()">列印／存 PDF</button>
-      <button onclick="saveJson()" title="把目前填的內容存成檔案下載到這台電腦，之後可以開啟接著改">儲存草稿</button>
-      <button onclick="loader.click()" title="選擇之前用「儲存草稿」下載的檔案，接著修改">開啟草稿</button>
+      ${Q.fromProject ? '' : '<button onclick="printPdf()">列印／存 PDF</button>'}
+      ${Q.fromProject ? '' : `<button onclick="saveJson()" title="把目前填的內容存成檔案下載到這台電腦，之後可以開啟接著改">儲存草稿</button>
+      <button onclick="loader.click()" title="選擇之前用「儲存草稿」下載的檔案，接著修改">開啟草稿</button>`}
     </div>
     <h3>報價資訊</h3>
     <div class="row"><div><label>報價日期</label>${inp('date', Q.date, 'date')}</div><div><label>報價有效天數</label>${inp('validDays', Q.validDays, 'number')}</div><div><label>確認後幾天內匯款</label>${inp('payDays', Q.payDays, 'number')}</div></div>
     <label>或指定匯款截止日（填了就印日期，不用天數）</label>${inp('payBy', Q.payBy, 'date')}
-    <label>活動名稱（檔名用）</label>${inp('event', Q.event)}
+    <label>活動名稱（檔名用）</label>${pinp('event', Q.event)}
     <h3>承租方</h3>
-    <label>公司／個人名稱</label>${inp('client.name', c.name)}
-    <div class="row"><div><label>統一編號</label>${inp('client.taxId', c.taxId)}</div><div><label>聯絡人</label>${inp('client.contact', c.contact)}</div></div>
-    <div class="row"><div><label>電話</label>${inp('client.phone', c.phone)}</div><div><label>Email</label>${inp('client.email', c.email)}</div></div>
+    ${Q.fromProject ? '<div class="std">灰色欄位來自專案，要修改請回專案編輯；Email 與地址在這裡填。</div>' : ''}
+    <label>公司／個人名稱</label>${pinp('client.name', c.name)}
+    <div class="row"><div><label>統一編號</label>${pinp('client.taxId', c.taxId)}</div><div><label>聯絡人</label>${pinp('client.contact', c.contact)}</div></div>
+    <div class="row"><div><label>電話</label>${pinp('client.phone', c.phone)}</div><div><label>Email</label>${inp('client.email', c.email)}</div></div>
     <label>地址（發票用，可空白）</label>${inp('client.address', c.address)}
     <h3>場地</h3>
-    ${Q.lines.map((l, i) => `<div class="card">
+    ${Q.lines.map((l, i) => l.locked ? `<div class="card">
+      <b>${esc(l.label.zh)}</b>
+      <div class="std">${shortDate(l.date)}${l.endDate ? '–' + shortDate(l.endDate) : ''}　${l.start}–${l.end}</div>
+      <div class="std">場地費 ${money(lineAmount(l, CONFIG))}${Q.discountNote ? `（已含長期合作 ${Q.discountNote} 折）` : ''}</div>
+      ${l.reason ? `<div class="std">議價理由（不印出）：${esc(l.reason)}</div>` : ''}
+      ${lineAmount(l, CONFIG) ? '' : '<div class="std"><b style="color:#a33">專案裡這筆的場地費是 0，請先回專案填場地費。</b></div>'}
+    </div>` : `<div class="card">
       <div class="row"><div>${sel(`lines.${i}.space`, l.space, CONFIG.spaces.map(s => [s.id, s.zh]))}</div>
         <button class="ghost" style="flex:0;color:var(--accent);white-space:nowrap" onclick="dupLine(${i})">複製</button>
         <button class="ghost" style="flex:0;white-space:nowrap" onclick="del('lines',${i})">刪除</button></div>
@@ -163,8 +185,8 @@ function renderEditor() {
         <div><label>議價理由（不印出）</label>${inp(`lines.${i}.reason`, l.reason)}</div></div>
       <div class="std" id="std-${i}"></div>
     </div>`).join('')}
-    <button onclick="addLine()">＋ 場地</button>
-    <label>長期合作折扣（輸入 85＝85 折、8 折輸入 80；空白＝無）</label>${inp('discount', Q.discount === 100 || !Q.discount ? '' : Q.discount, 'number', 'min="1" max="100"')}
+    ${Q.fromProject ? `<div class="std">場地、日期、時間、場地費都來自專案。要修改請按左上角「回專案」編輯，存檔後再開啟報價單就會更新。</div>` : `<button onclick="addLine()">＋ 場地</button>
+    <label>長期合作折扣（輸入 85＝85 折、8 折輸入 80；空白＝無。報價單上直接印折扣後金額）</label>${inp('discount', Q.discount === 100 || !Q.discount ? '' : Q.discount, 'number', 'min="1" max="100"')}`}
     <h3>加購（餐飲、設備）</h3>
     ${Q.addons.map((a, i) => `<div class="card">
       <div class="row"><b style="flex:1">${(CATS.find(c => c[0] === a.cat) || [, '自訂'])[1]}</b>
@@ -173,10 +195,11 @@ function renderEditor() {
       <label>供應時間／說明（例：上午 10:00 提供；中英版共用）</label>${inp(`addons.${i}.note`, a.note || '')}
     </div>`).join('')}
     <div class="row">${sel('_addon', '', [['', '＋ 加購：選擇分類…'], ...CATS])}</div>
+    ${Q.fromProject ? '<div class="std" id="fnb-note"></div>' : ''}
     <h3>付款</h3>
     <label style="color:inherit"><input data-k="fullPay" type="checkbox" style="width:auto" ${Q.fullPay ? 'checked' : ''}> 全額付款（不印訂金、尾款）</label>
     ${Q.fullPay ? '' : `<label>訂金（空白＝合計 50%）</label>${inp('depositManual', Q.depositManual, 'number')}`}
-    <label>其他備註（會印在條款最後）</label><textarea data-k="note" rows="2">${esc(Q.note)}</textarea>`;
+    <label>其他備註（印在條款最後；按 Enter 換行，每一行會成為獨立的一條）</label><textarea data-k="note" rows="4">${esc(Q.note)}</textarea>`;
   renderPreview();
 }
 
@@ -186,6 +209,7 @@ function setPath(path, val) {
   o[keys.at(-1)] = val;
 }
 document.getElementById('editor').addEventListener('input', e => {
+  window.quoteDirty = true; // 有未儲存的修改（專案模式離開頁面前會提醒）
   const pick = e.target.dataset.pick;
   if (pick !== undefined) {
     const a = Q.addons[pick], v = e.target.value;
@@ -212,10 +236,11 @@ document.getElementById('editor').addEventListener('input', e => {
 
 // 預覽表格的品名與說明
 function addonText(a, L) {
-  const t = T[L], each = `${a.qty} × ${money(a.unit)}`;
+  // 數量為 1 時金額欄已經說明一切，說明欄留白
+  const one = Number(a.qty) === 1, t = T[L], each = one ? '' : `${a.qty} × ${money(a.unit)}`;
   if (a.cat === 'drink') {
     const d = CONFIG.drinks[a.item], temp = a.temp === '冰' ? t.iced : t.hot;
-    return [L === 'zh' ? `${d.zh}・${temp}` : `${d.en} (${temp})`, `${a.qty} ${t.bucket} × ${money(a.unit)}<br>${CONFIG.drinkNote[L]}`];
+    return [L === 'zh' ? `${d.zh}・${temp}` : `${d.en} (${temp})`, one ? '' : `${a.qty} ${t.bucket} × ${money(a.unit)}`];
   }
   if (a.cat === 'pastry') {
     const names = a.picks.map(z => {
@@ -223,9 +248,9 @@ function addonText(a, L) {
       const f = p.flavors?.[a.flavor];
       return L === 'zh' ? p.zh + (f ? `（${f[0]}）` : '') : (f ? `${f[1]} ` : '') + p.en;
     }).join(L === 'zh' ? '、' : ', ');
-    return [t.pastry(a.unit), `${t.pastryDesc(a.picks.length, esc(names))}<br>${a.qty} ${t.person} × ${money(a.unit)}`];
+    return [t.pastry(a.unit), t.pastryDesc(a.picks.length, esc(names)) + (one ? '' : `<br>${a.qty} ${t.person} × ${money(a.unit)}`)];
   }
-  if (a.cat === 'meal') return [a[L] || a.zh, `${a.qty} ${t.person} × ${money(a.unit)}`];
+  if (a.cat === 'meal') return [a[L] || a.zh, one ? '' : `${a.qty} ${t.person} × ${money(a.unit)}`];
   if (a.cat === 'equip') return [CONFIG.equipment[a.item][L], each];
   return [a[L] || a.zh, each];
 }
@@ -243,7 +268,7 @@ function dupLine(i) {
   Q.lines.splice(i + 1, 0, { ...l, date });
   renderEditor();
 }
-const del = (list, i) => { Q[list].splice(i, 1); renderEditor(); };
+const del = (list, i) => { Q[list].splice(i, 1); window.quoteDirty = true; renderEditor(); };
 
 // ---------- preview ----------
 function renderPreview() {
@@ -253,53 +278,74 @@ function renderPreview() {
     const p = standardPrice(l, CONFIG), el = document.getElementById('std-' + i);
     if (el) el.textContent = p ? `標準價 ${money(p.amount)}：${p.zh}` : (CONFIG.spaces.find(s => s.id === l.space)?.rule === 'manual' ? '此空間尚無正式價，請輸入議價金額' : '填日期與時間後計算標準價');
   });
+  // 從專案帶入時：提示加購合計與專案餐飲費是否一致（餐飲費不會自動同步，儲存到專案時才詢問）
+  const fnbNote = document.getElementById('fnb-note');
+  if (fnbNote) {
+    const same = tot.addons === (Q.projectFnb || 0);
+    fnbNote.className = same ? 'std' : 'warn';
+    fnbNote.innerHTML = same ? `專案的餐飲費目前是 ${money(Q.projectFnb || 0)}，與加購合計一致。`
+      : `⚠ 餐飲費與專案不一致<br>專案的餐飲費：${money(Q.projectFnb || 0)}<br>報價單加購合計：${money(tot.addons)}<br><span style="font-weight:400">加購不會自動寫回專案。按上方「儲存到專案」時會跳出視窗，讓你選擇要不要更新專案。</span>`;
+  }
   // 同一場地的多個日期排在一起（場地依第一次出現的順序，組內依日期時間），場地名只寫一次
-  const order = [...new Set(Q.lines.map(l => l.space))];
-  const sorted = [...Q.lines].sort((a, b) => order.indexOf(a.space) - order.indexOf(b.space) || (a.date + a.start).localeCompare(b.date + b.start));
+  // 從專案帶入的列（locked）用專案的空間名稱，可一列多空間
+  const nameOf = l => l.label ? l.label[L] : CONFIG.spaces.find(s => s.id === l.space)[L];
+  const order = [...new Set(Q.lines.map(nameOf))];
+  const sorted = [...Q.lines].sort((a, b) => order.indexOf(nameOf(a)) - order.indexOf(nameOf(b)) || (a.date + a.start).localeCompare(b.date + b.start));
   const rows = sorted.map((l, i) => {
-    const sp = CONFIG.spaces.find(s => s.id === l.space);
-    const span = sorted.filter(x => x.space === l.space).length;
-    const first = i === 0 || sorted[i - 1].space !== l.space;
+    const span = sorted.filter(x => nameOf(x) === nameOf(l)).length;
+    const first = i === 0 || nameOf(sorted[i - 1]) !== nameOf(l);
     const time = l.start && l.end ? `${l.start}–${l.end}` : '';
-    return `<tr>${first ? `<td rowspan="${span}">${esc(sp[L])}</td>` : ''}<td class="date">${shortDate(l.date)}</td><td>${time}</td><td class="amt">${money(lineAmount(l, CONFIG))}</td></tr>`;
+    return `<tr>${first ? `<td rowspan="${span}">${esc(nameOf(l)).replace(/＋| \+ /g, '<br>')}</td>` : ''}<td class="date">${shortDate(l.date)}${l.endDate ? '–' + shortDate(l.endDate).replace(/^\d+\//, '') : ''}</td><td>${time}</td><td class="amt">${money(discounted(lineAmount(l, CONFIG), Q))}</td></tr>`; // 報價單只印折扣後金額，不另列折扣
   });
-  if (tot.discount) rows.push(`<tr><td>${t.disc}</td><td></td><td>${t.discDesc(Q.discount)}</td><td class="amt">−${money(tot.discount)}</td></tr>`);
   Q.addons.forEach(a => {
     const [name, desc] = addonText(a, L);
-    rows.push(`<tr><td>${esc(name)}</td><td></td><td>${desc}${a.note ? "<br>" + esc(a.note) : ""}</td><td class="amt">${money(a.qty * a.unit)}</td></tr>`);
+    rows.push(`<tr><td>${esc(name)}</td><td></td><td>${[desc, a.note ? esc(a.note) : ""].filter(Boolean).join("<br>")}</td><td class="amt">${money(a.qty * a.unit)}</td></tr>`);
   });
   const payment = (Q.fullPay ? t.payFull : t.payDep)(tot.deposit.toLocaleString('en-US'));
   // 全額付款時，退改規則的「訂金」改寫成「已付款項」
   const paid = x => Q.fullPay ? t.paidSwap.reduce((s, [a, b]) => s.replaceAll(a, b), x) : x;
-  const terms = CONFIG.terms[L].map(s => Array.isArray(s) ? s.map(paid) : s.replace('{valid}', Q.validDays).replace('{payWhen}', Q.payBy ? t.payBy(longDate(Q.payBy, L)) : t.payIn(Q.payDays ?? 7)).replace('{payment}', payment));
-  if (Q.note) terms.push(Q.note);
-  const party = (title, name, rows) => `<div><b>${title}${C}${esc(name)}</b>${rows.filter(r => r[1]).map(r => `${r[0]}${C}${esc(r[1])}`).join('<br>')}</div>`;
+  const terms = CONFIG.terms[L].map(s => Array.isArray(s) ? s.map(paid) : s.replace('{valid}', Q.validDays).replace('{payWhen}', Q.payBy ? t.payBy(longDate(Q.payBy, L)) : t.payIn(Q.payDays ?? 3)).replace('{payment}', payment));
+  // 其他備註：每一行各自成為一條（接在條款後面繼續編號）
+  if (Q.note) terms.push(...Q.note.split('\n').map(x => x.trim()).filter(Boolean));
+  const party = (title, name, rows) => `<div><span class="lbl">${title}</span><b>${esc(name)}</b>${rows.filter(r => r[1]).map(r => `${r[0]}${C}${esc(r[1])}`).join('<br>')}</div>`;
 
+  const vd = new Date(Q.date + 'T00:00'); vd.setDate(vd.getDate() + (Number(Q.validDays) || 0));
+  const validUntil = `${vd.getFullYear()}-${String(vd.getMonth() + 1).padStart(2, '0')}-${String(vd.getDate()).padStart(2, '0')}`;
+  const logo = `<img class="logo" src="${LOGO}" alt="CollaPlay 可能存在的遊樂園">`;
   document.getElementById('paper').innerHTML = `
-    <h1>${t.title}</h1>
-    <div class="meta"><span>${esc(Q.event)}</span><span>${t.date}${C}${longDate(Q.date, L)}</span></div>
+    <div class="sheet">
+    <div class="head">
+      <div><h1${L === 'zh' ? ' style="margin-left:-0.5em"' : ''}>${t.title}</h1>${L === 'zh' ? '<div class="en">VENUE RENTAL QUOTATION</div>' : ''}</div>
+      <div class="meta">${t.date}${C}<b>${longDate(Q.date, L)}</b>${Q.date ? `<br>${L === 'zh' ? '報價有效至' : 'Valid until'}${C}<b>${longDate(validUntil, L)}</b>` : ''}</div>
+    </div>
+    ${Q.event ? `<div class="event">${esc(Q.event)}</div>` : ''}
     <div class="parties">
       ${party(t.client, c.name, [[t.taxId, c.taxId], [t.contact, c.contact], [t.phone, c.phone], [t.email, c.email], [t.addr, c.address]])}
       ${party(t.lessor, lessor[L], [[t.taxId, lessor.taxId], [t.rep, L === 'zh' ? lessor.repZh : lessor.repEn], [t.email, lessor.email], [t.phone, lessor.phone], [t.addr, L === 'zh' ? lessor.addrZh : lessor.addrEn]])}
     </div>
     <table>
-      <tr><th style="width:30%">${t.item}</th><th style="width:13%">${t.day}</th><th>${t.desc}</th><th class="amt" style="width:16%">${t.amt}</th></tr>
+      <tr><th style="width:36%">${t.item}</th><th style="width:13%">${t.day}</th><th>${t.desc}</th><th class="amt" style="width:16%">${t.amt}</th></tr>
       ${rows.join('')}
     </table>
     <table class="sum" style="width:50%;margin-left:auto;margin-top:6px">
       <tr><td>${t.net}</td><td class="amt">${money(tot.net)}</td></tr>
       <tr><td>${t.tax}</td><td class="amt">${money(tot.tax)}</td></tr>
       <tr class="big"><td>${t.total}</td><td class="amt">${money(tot.total)}</td></tr>
-      ${Q.fullPay ? '' : `<tr><td>${t.deposit}</td><td class="amt">${money(tot.deposit)}</td></tr>
-      <tr><td>${t.balance}</td><td class="amt">${money(tot.balance)}</td></tr>`}
+      ${Q.fullPay ? '' : `<tr class="pay"><td>${t.deposit}</td><td class="amt">${money(tot.deposit)}</td></tr>
+      <tr class="pay"><td>${t.balance}</td><td class="amt">${money(tot.balance)}</td></tr>`}
     </table>
+    <div class="bank"><b>${t.bank}</b><br>${t.bankL}${C}${L === 'zh' ? lessor.bankZh : lessor.bankEn}<br>${t.acct}${C}${lessor.account}<br>${t.acctName}${C}${lessor.accountName}</div>
+    ${logo}<span class="pageno">1 / 2</span>
+    </div>
+    <div class="sheet">
     <div class="terms"><b>${t.terms}</b><ol>${terms.map(s => Array.isArray(s)
       ? `<li>${esc(s[0])}<ul style="margin:2px 0;padding-left:16px">${s.slice(1).map(x => `<li>${esc(x)}</li>`).join('')}</ul></li>`
       : `<li>${esc(s)}</li>`).join('')}</ol></div>
-    <div class="bank"><b>${t.bank}</b><br>${t.bankL}${C}${L === 'zh' ? lessor.bankZh : lessor.bankEn}<br>${t.acct}${C}${lessor.account}<br>${t.acctName}${C}${lessor.accountName}</div>
     <div class="sign">
       <div>${t.client}<div class="ln"></div>${t.sign}</div>
       <div>${t.lessor}<div class="ln"></div>${t.sign}</div>
+    </div>
+    ${logo}<span class="pageno">2 / 2</span>
     </div>`;
 }
 

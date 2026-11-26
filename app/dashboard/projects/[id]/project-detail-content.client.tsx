@@ -1,5 +1,6 @@
 "use client";
 
+import { RentalPriceNoteField, RentalPricingFields } from "@/components/features/project/rental-pricing-fields";
 import * as React from "react";
 import { useTransition, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -11,6 +12,7 @@ import {
   CalendarIcon,
   Plus,
   Trash2,
+  Copy,
   Pencil,
   Loader2,
   Download,
@@ -145,12 +147,15 @@ const EQUIPMENT_NEEDS_LINE_LABELS = {
 
 interface EditRentalFormDialogProps {
   rental: ProjectWithRentals["rentals"][0];
+  /** 專案的長期合作折扣，算標準價折後金額用 */
+  discountPercent?: number | null;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 function EditRentalFormDialog({
   rental,
+  discountPercent,
   onClose,
   onSuccess,
 }: EditRentalFormDialogProps) {
@@ -372,6 +377,7 @@ function EditRentalFormDialog({
                 )}
               />
             </div>
+            <RentalPricingFields discountPercent={discountPercent ?? null} />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <FormField
                 control={form.control}
@@ -436,7 +442,7 @@ function EditRentalFormDialog({
                           }
                         />
                       </FormControl>
-                      <FormLabel className="font-normal leading-none">
+                      <FormLabel className="font-normal leading-none text-xs whitespace-nowrap">
                         {CREATE_PROJECT_PAGE.labelFnbAmountPending}
                       </FormLabel>
                     </FormItem>
@@ -480,6 +486,7 @@ function EditRentalFormDialog({
                 </div>
               </FormItem>
             </div>
+            <RentalPriceNoteField discountPercent={discountPercent ?? null} />
             {form.formState.errors.root?.message ? (
               <p className="text-sm text-destructive" role="alert">
                 {form.formState.errors.root.message}
@@ -757,6 +764,7 @@ function AddRentalFormDialog({
                 )}
               />
             </div>
+            <RentalPricingFields discountPercent={project.discountPercent ?? null} />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <FormField
                 control={form.control}
@@ -821,7 +829,7 @@ function AddRentalFormDialog({
                           }
                         />
                       </FormControl>
-                      <FormLabel className="font-normal leading-none">
+                      <FormLabel className="font-normal leading-none text-xs whitespace-nowrap">
                         {CREATE_PROJECT_PAGE.labelFnbAmountPending}
                       </FormLabel>
                     </FormItem>
@@ -865,6 +873,7 @@ function AddRentalFormDialog({
                 </div>
               </FormItem>
             </div>
+            <RentalPriceNoteField discountPercent={project.discountPercent ?? null} />
             {form.formState.errors.root?.message ? (
               <p className="text-sm text-destructive" role="alert">
                 {form.formState.errors.root.message}
@@ -941,7 +950,7 @@ export function ProjectDetailContent({
     defaultValues: projectToEditFormValues(project),
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, insert } = useFieldArray({
     control: form.control,
     name: "rentals",
   });
@@ -1600,17 +1609,35 @@ export function ProjectDetailContent({
                     <span className="text-sm font-medium tabular-nums">
                       第 {index + 1} 筆
                     </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => remove(index)}
-                      disabled={fields.length <= 1}
-                      aria-label={CREATE_PROJECT_PAGE.removeRentalAria}
-                    >
-                      <Trash2 className="size-4" />
-                      {CREATE_PROJECT_PAGE.removeRental}
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {/* 與新增專案表單一致：複製此筆，插在下一筆 */}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          insert(
+                            index + 1,
+                            structuredClone(form.getValues(`rentals.${index}`)),
+                          )
+                        }
+                        aria-label={CREATE_PROJECT_PAGE.copyRentalAria}
+                      >
+                        <Copy className="size-4" aria-hidden />
+                        {CREATE_PROJECT_PAGE.copyRental}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => remove(index)}
+                        disabled={fields.length <= 1}
+                        aria-label={CREATE_PROJECT_PAGE.removeRentalAria}
+                      >
+                        <Trash2 className="size-4" />
+                        {CREATE_PROJECT_PAGE.removeRental}
+                      </Button>
+                    </div>
                   </div>
                   <FormField
                     control={form.control}
@@ -1803,6 +1830,7 @@ export function ProjectDetailContent({
                       )}
                     />
                   </div>
+                  <RentalPricingFields prefix={`rentals.${index}.`} discountSameAsFirst={index > 0} />
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <FormField
                       control={form.control}
@@ -1875,7 +1903,7 @@ export function ProjectDetailContent({
                                 }
                               />
                             </FormControl>
-                            <FormLabel className="font-normal leading-none">
+                            <FormLabel className="font-normal leading-none text-xs whitespace-nowrap">
                               {CREATE_PROJECT_PAGE.labelFnbAmountPending}
                             </FormLabel>
                           </FormItem>
@@ -1923,6 +1951,7 @@ export function ProjectDetailContent({
                       </div>
                     </FormItem>
                   </div>
+                  <RentalPriceNoteField prefix={`rentals.${index}.`} />
                 </div>
               ))}
               <Button
@@ -1971,6 +2000,7 @@ export function ProjectDetailContent({
     <div className="min-w-0 flex flex-col gap-6">
       {editingRental ? (
         <EditRentalFormDialog
+          discountPercent={project.discountPercent ?? null}
           key={editingRental.id}
           rental={editingRental}
           onClose={() => setEditingRentalId(null)}
@@ -2330,6 +2360,7 @@ export function ProjectDetailContent({
             <p className="text-sm text-muted-foreground mt-1">
               {PROJECT_DETAIL_PAGE.totalAmount}:{" "}
               {CURRENCY_FORMATTER.format(totalAmount)}
+              {project.discountPercent ? `　長期合作 ${project.discountPercent} 折（場地費為折後金額）` : null}
             </p>
           </CardHeader>
           <CardContent>
@@ -2390,6 +2421,11 @@ export function ProjectDetailContent({
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {CURRENCY_FORMATTER.format(r.rentalAmount)}
+                        {r.priceNote ? (
+                          <span className="text-muted-foreground block text-xs font-normal">
+                            議價：{r.priceNote}
+                          </span>
+                        ) : null}
                       </TableCell>
                       <TableCell
                         className={cn(

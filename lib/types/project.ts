@@ -28,6 +28,8 @@ export interface Project {
   eventType: string;
   space: string;
   date: string; // ISO date string
+  /** 專案建立時間 */
+  createdAt: string; // ISO datetime string
   /** 對應 DB collaPlayContactId（CollaPlay 窗口） */
   contactPerson: string;
   amount: number;
@@ -87,6 +89,12 @@ export interface RentalItem {
   fnbAmountPending?: boolean;
   paidAmount: number;
   pendingAmount: number;
+  /** 計價方案 A／B；未傳視同 A */
+  pricePlan?: string;
+  /** 國定假日（以假日價計）；未傳視同 false */
+  isHoliday?: boolean;
+  /** 議價理由（內部用） */
+  priceNote?: string | null;
 }
 
 /** 單筆租借更新用（供 updateProjectRental / updateRental 使用） */
@@ -112,6 +120,8 @@ export interface CreateProjectInput {
   equipmentNeeds?: ProjectEquipmentNeeds | null;
   /** 是否需要列印告示（必填） */
   needsPrintedNotice: boolean;
+  /** 長期合作折扣（85＝85 折）；未傳或 null＝無 */
+  discountPercent?: number | null;
   rentals: RentalItem[];
 }
 
@@ -137,6 +147,8 @@ export interface UpdateProjectInput {
   /** 是否需要列印告示（未傳則不更新，向後相容） */
   needsPrintedNotice?: boolean;
   status?: ProjectStatus;
+  /** 長期合作折扣；未傳則不更新（向後相容），null＝清除 */
+  discountPercent?: number | null;
   rentals: (RentalItem & { id?: string })[];
 }
 
