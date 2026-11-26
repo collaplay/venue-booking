@@ -1,7 +1,7 @@
 // node test.js —— 價目表 v2 公式自我檢查
 const assert = require('assert');
 const CFG = require('./config.js');
-const { standardPrice, totals } = require('./pricing.js');
+const { standardPrice, totals, discounted } = require('./pricing.js');
 const p = l => standardPrice(l, CFG).amount;
 
 // 2026-08-11（二）教室 3 小時，對照實際報價 3,800
@@ -34,4 +34,7 @@ assert.deepStrictEqual(t, { venue: 5800, discount: 1160, addons: 2400, total: 70
 assert.strictEqual(totals({ lines: [], addons: [{ qty: 1, unit: 10000 }], depositManual: '3000' }, CFG).deposit, 3000);
 // 全額付款：訂金＝合計、尾款 0（預覽不印這兩列）
 assert.strictEqual(totals({ lines: [], addons: [{ qty: 1, unit: 10000 }], depositManual: '3000', fullPay: true }, CFG).balance, 0);
+// 折扣逐列計算：報價單每列直接印折扣後金額
+assert.strictEqual(discounted(3800, { discount: 85 }), 3230);
+assert.strictEqual(discounted(3800, {}), 3800);
 console.log('ok');

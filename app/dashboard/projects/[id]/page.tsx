@@ -69,6 +69,11 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     redirect("/");
   }
 
+  // 這個專案存過報價單沒有（決定按鈕文字）；草稿表不存在時當作沒有
+  const hasQuote = !!(await prisma.projectQuoteDraft
+    .findUnique({ where: { projectId: id }, select: { projectId: true } })
+    .catch(() => null));
+
   return (
     <DashboardShell>
       <PageHeader
@@ -85,11 +90,11 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
               {PROJECT_DETAIL_PAGE.buttonBackToList}
             </Button>
           </Link>
-          {/* 報價單頁是 route handler 送出的獨立網頁，用一般連結開新分頁 */}
+          {/* 報價單頁是 route handler 送出的獨立網頁，用一般連結（不走 Next 的 client 導頁） */}
           <Button asChild variant="outline" size="sm" className="gap-2">
-            <a href={`/dashboard/quote?project=${id}`} target="_blank" rel="noopener">
+            <a href={`/dashboard/quote?project=${id}`}>
               <FileText className="size-4" />
-              建立報價單
+              {hasQuote ? "開啟報價單" : "建立報價單"}
             </a>
           </Button>
         </div>

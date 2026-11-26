@@ -24,6 +24,7 @@ export function buildDuplicateProjectPrefill(
       fnbAmount: 0,
       paidAmount: 0,
       fnbAmountPending: false,
+      priceNote: "", // 議價理由跟著金額一起清空，避免留下對不上金額的舊理由
     })),
   };
 }

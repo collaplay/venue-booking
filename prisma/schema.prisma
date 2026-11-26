@@ -297,6 +297,7 @@ model Project {
   internalNotes       String? // 內部備註
   equipmentNeeds      Json?    @db.JsonB // 設備勾選（麥克風、延長線、投影、白板等），舊資料為 null
   needsPrintedNotice  Boolean  @default(true) // 是否需要列印告示；舊資料預設需要
+  discountPercent     Int? // 長期合作折扣（85＝85 折）；null＝無。場地費欄位存的是折扣後實收金額
   status              ProjectStatus  @default(negotiating)
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
@@ -334,6 +335,9 @@ model ProjectRental {
   paidAmount           Int      @default(0) // 已付
   pendingAmount        Int      @default(0) // 待付
   spaceIds             String[] // 場域 ID 陣列（PostgreSQL）
+  pricePlan            String   @default("A") @db.VarChar(1) // 計價方案 A／B（算標準價用，見 quote-tool/config.js）
+  isHoliday            Boolean  @default(false) // 國定假日：以假日價計
+  priceNote            String? // 議價理由（場地費與標準價不同時填，內部用）
   project              Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])

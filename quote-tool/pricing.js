@@ -66,12 +66,18 @@ function standardPrice(line, cfg) {
 // 合計：金額皆含稅
 function totals(q, cfg) {
   const venue = q.lines.reduce((t, l) => t + lineAmount(l, cfg), 0);
-  const discount = Math.round(venue * (100 - (q.discount || 100)) / 100);
+  // 折扣逐列計算（報價單每列直接印折扣後金額），合計才會等於各列相加
+  const discount = q.lines.reduce((t, l) => t + lineAmount(l, cfg) - discounted(lineAmount(l, cfg), q), 0);
   const addons = q.addons.reduce((t, a) => t + (Number(a.qty) || 0) * (Number(a.unit) || 0), 0);
   const total = venue - discount + addons;
   const net = Math.round(total / 1.05);
   const deposit = q.fullPay ? total : q.depositManual !== '' && q.depositManual != null ? Number(q.depositManual) : Math.round(total * 0.5);
   return { venue, discount, addons, total, net, tax: total - net, deposit, balance: total - deposit };
+}
+
+// 套用長期合作折扣後的單列金額（q.discount：85＝85 折；空白或 100＝不打折）
+function discounted(amount, q) {
+  return Math.round(amount * (q.discount || 100) / 100);
 }
 
 function lineAmount(l, cfg) {
@@ -80,4 +86,4 @@ function lineAmount(l, cfg) {
   return p ? p.amount : 0;
 }
 
-if (typeof module !== 'undefined') module.exports = { standardPrice, totals, lineAmount, isWeekend };
+if (typeof module !== 'undefined') module.exports = { standardPrice, totals, lineAmount, discounted, isWeekend };

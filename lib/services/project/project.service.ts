@@ -616,6 +616,7 @@ export async function getCachedProjectById(
           collaPlayContactId: true,
           internalNotes: true,
           needsPrintedNotice: true,
+          discountPercent: true,
           equipmentNeeds: true,
           status: true,
           createdAt: true,
@@ -636,6 +637,10 @@ export async function getCachedProjectById(
               paidAmount: true,
               pendingAmount: true,
               spaceIds: true,
+              // 計價資訊：漏列的話編輯表單會讀不到，存檔時就被清空
+              pricePlan: true,
+              isHoliday: true,
+              priceNote: true,
             },
           },
         },
@@ -674,6 +679,25 @@ async function getProjectsBySpaceIdImpl(spaceId: string): Promise<Project[]> {
 }
 
 export const getProjectsBySpaceId = cache(getProjectsBySpaceIdImpl);
+
+/** 計價資訊欄位正規化（方案只收 A／B；議價理由空字串存 null） */
+function rentalPricingFieldsForDb(r: {
+  pricePlan?: string;
+  isHoliday?: boolean;
+  priceNote?: string | null;
+}) {
+  return {
+    pricePlan: r.pricePlan === "B" ? "B" : "A",
+    isHoliday: r.isHoliday ?? false,
+    priceNote: r.priceNote?.trim() || null,
+  };
+}
+
+/** 長期合作折扣正規化：1–99 的整數才算折扣，其餘（含 100）存 null */
+function discountPercentForDb(v: number | null | undefined): number | null {
+  const n = Math.round(Number(v));
+  return n >= 1 && n <= 99 ? n : null;
+}
 
 /**
  * 更新專案（主檔 + 租借項目）
@@ -721,6 +745,9 @@ export async function updateProject(
           needsPrintedNotice: input.needsPrintedNotice,
         }),
         ...(input.status != null && { status: input.status }),
+        ...(input.discountPercent !== undefined && {
+          discountPercent: discountPercentForDb(input.discountPercent),
+        }),
         ...(input.equipmentNeeds !== undefined && {
           equipmentNeeds: equipmentNeedsToPrismaInput(
             normalizeEquipmentNeedsForDb(input.equipmentNeeds),
@@ -741,6 +768,7 @@ export async function updateProject(
           teardownMinutesAfter: r.teardownMinutesAfter ?? 30,
           rentalAmount: Math.max(0, Math.round(r.rentalAmount)),
           ...fnbFields,
+          ...rentalPricingFieldsForDb(r),
           paidAmount: Math.max(0, Math.round(r.paidAmount)),
           pendingAmount: computeProjectRentalPendingAmount({
             rentalAmount: r.rentalAmount,
@@ -818,6 +846,7 @@ export async function updateProjectRental(
       teardownMinutesAfter: input.teardownMinutesAfter ?? 30,
       rentalAmount: Math.max(0, Math.round(input.rentalAmount)),
       ...fnbFields,
+      ...rentalPricingFieldsForDb(input),
       paidAmount: Math.max(0, Math.round(input.paidAmount)),
       pendingAmount: computeProjectRentalPendingAmount({
         rentalAmount: input.rentalAmount,
@@ -893,6 +922,7 @@ export async function createProject(
         collaPlayContactId: input.collaPlayContactId,
         internalNotes: input.internalNotes ?? null,
         needsPrintedNotice: input.needsPrintedNotice ?? false,
+        discountPercent: discountPercentForDb(input.discountPercent),
         equipmentNeeds: equipmentNeedsToPrismaInput(
           normalizeEquipmentNeedsForDb(input.equipmentNeeds),
         ),
@@ -913,6 +943,7 @@ export async function createProject(
           teardownMinutesAfter: r.teardownMinutesAfter ?? 30,
           rentalAmount: Math.max(0, Math.round(r.rentalAmount)),
           ...fnbFields,
+          ...rentalPricingFieldsForDb(r),
           paidAmount: Math.max(0, Math.round(r.paidAmount)),
           pendingAmount: computeProjectRentalPendingAmount({
             rentalAmount: r.rentalAmount,
