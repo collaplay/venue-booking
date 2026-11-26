@@ -15,9 +15,9 @@ interface AuthFormLayoutProps {
   title: string;
   description: string;
   error?: string | null;
-  footerText: string;
-  footerLinkText: string;
-  footerLinkHref: string;
+  footerText?: string;
+  footerLinkText?: string;
+  footerLinkHref?: string;
   children: ReactNode;
 }
 
@@ -43,12 +43,14 @@ export function AuthFormLayout({
           </div>
         )}
         {children}
-        <div className="mt-4 text-center text-sm">
-          <span className="text-muted-foreground">{footerText}</span>{" "}
-          <Link href={footerLinkHref} className="text-primary hover:underline">
-            {footerLinkText}
-          </Link>
-        </div>
+        {footerLinkHref ? (
+          <div className="mt-4 text-center text-sm">
+            <span className="text-muted-foreground">{footerText}</span>{" "}
+            <Link href={footerLinkHref} className="text-primary hover:underline">
+              {footerLinkText}
+            </Link>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

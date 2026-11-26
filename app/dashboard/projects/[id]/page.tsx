@@ -66,7 +66,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     select: { isAdmin: true },
   });
   if (!user?.isAdmin) {
-    redirect("/");
+    redirect("/profile");
   }
 
   // 這個專案存過報價單沒有（決定按鈕文字）；草稿表不存在時當作沒有

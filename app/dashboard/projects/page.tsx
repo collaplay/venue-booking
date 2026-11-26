@@ -44,7 +44,7 @@ export default async function ProjectsPage({ searchParams }: PageProps) {
     select: { isAdmin: true },
   });
   if (!user?.isAdmin) {
-    redirect("/");
+    redirect("/profile");
   }
 
   const now = new Date();
